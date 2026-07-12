@@ -471,73 +471,88 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     if (j - i == 1) coef = _bpHeightIncrement * 2;
     else coef = _bpHeightIncrement * 1;
     distance = (int) Math.round(dest.x - orig.x);
-    if (conf._mainBPStyle != BP_STYLE.LW) {
-      out.drawArc(center, distance, distance * coef, 180, 0);
-    } else {
-      double thickness = getBasePairThickness(style, conf);
-      double radiusCircle = ((BASE_PAIR_DISTANCE - BASE_RADIUS) / 5.0);
+    switch (conf._mainBPStyle) {
+      case LW:
+      case LW_ALT:
+        {
+          double thickness = getBasePairThickness(style, conf);
+          double radiusCircle = ((BASE_PAIR_DISTANCE - BASE_RADIUS) / 5.0);
 
-      if (style.isCanonical()) {
-        if (style.isCanonicalGC()) {
-          if ((orig.x != dest.x) || (orig.y != dest.y)) {
-            out.drawArc(
-                center, distance - BASE_RADIUS / 2., distance * coef - BASE_RADIUS / 2, 180, 0);
-            out.drawArc(
-                center, distance + BASE_RADIUS / 2., distance * coef + BASE_RADIUS / 2, 180, 0);
+          if (style.isCanonical()) {
+            if (style.isCanonicalGC()) {
+              if ((orig.x != dest.x) || (orig.y != dest.y)) {
+                out.drawArc(
+                    center, distance - BASE_RADIUS / 2., distance * coef - BASE_RADIUS / 2, 180, 0);
+                out.drawArc(
+                    center, distance + BASE_RADIUS / 2., distance * coef + BASE_RADIUS / 2, 180, 0);
+              }
+            } else if (style.isCanonicalAU() || style.isWobbleUG()) {
+              out.drawArc(center, distance, distance * coef, 180, 0);
+            } else {
+              out.drawArc(center, distance, distance * coef, 180, 0);
+              drawSymbol(
+                  out,
+                  center.x,
+                  center.y + distance * coef / 2.,
+                  180.,
+                  0,
+                  radiusCircle,
+                  style.isCIS(),
+                  style.getEdgePartner5(),
+                  thickness);
+            }
+          } else {
+            ModeleBP.Edge p1 = style.getEdgePartner5();
+            ModeleBP.Edge p2 = style.getEdgePartner3();
+            out.drawArc(center, distance, distance * coef, 180, 0);
+            if (p1 == p2) {
+              drawSymbol(
+                  out,
+                  center.x,
+                  center.y + distance * coef / 2.,
+                  1.,
+                  0,
+                  radiusCircle,
+                  style.isCIS(),
+                  style.getEdgePartner5(),
+                  thickness);
+            } else {
+              if (conf._mainBPStyle == BP_STYLE.LW_ALT) {
+                Point2D.Double apexOrig =
+                    new Point2D.Double(center.x - BASE_RADIUS, center.y + distance * coef / 2.);
+                Point2D.Double apexDest =
+                    new Point2D.Double(center.x + BASE_RADIUS, center.y + distance * coef / 2.);
+                AlternativeLeontisWesthofDrawing.drawAlternativeSymbol(
+                    out, apexOrig, apexDest, style, thickness, radiusCircle, style.isCIS(), true);
+              } else {
+                drawSymbol(
+                    out,
+                    center.x - BASE_RADIUS,
+                    center.y + distance * coef / 2.,
+                    1.,
+                    0,
+                    radiusCircle,
+                    style.isCIS(),
+                    p1,
+                    thickness);
+                drawSymbol(
+                    out,
+                    center.x + BASE_RADIUS,
+                    center.y + distance * coef / 2.,
+                    1.,
+                    0,
+                    radiusCircle,
+                    style.isCIS(),
+                    p2,
+                    thickness);
+              }
+            }
           }
-        } else if (!style.isWobbleUG()) {
-          out.drawArc(center, distance, distance * coef, 180, 0);
-          drawSymbol(
-              out,
-              center.x,
-              center.y + distance * coef / 2.,
-              180.,
-              0,
-              radiusCircle,
-              style.isCIS(),
-              style.getEdgePartner5(),
-              thickness);
-        } else {
-          out.drawArc(center, distance, distance * coef, 180, 0);
         }
-      } else {
-        ModeleBP.Edge p1 = style.getEdgePartner5();
-        ModeleBP.Edge p2 = style.getEdgePartner3();
+        break;
+      default:
         out.drawArc(center, distance, distance * coef, 180, 0);
-        if (p1 == p2) {
-          drawSymbol(
-              out,
-              center.x,
-              center.y + distance * coef / 2.,
-              1.,
-              0,
-              radiusCircle,
-              style.isCIS(),
-              style.getEdgePartner5(),
-              thickness);
-        } else {
-          drawSymbol(
-              out,
-              center.x - BASE_RADIUS,
-              center.y + distance * coef / 2.,
-              1.,
-              0,
-              radiusCircle,
-              style.isCIS(),
-              p1,
-              thickness);
-          drawSymbol(
-              out,
-              center.x + BASE_RADIUS,
-              center.y + distance * coef / 2.,
-              1.,
-              0,
-              radiusCircle,
-              style.isCIS(),
-              p2,
-              thickness);
-        }
-      }
+        break;
     }
   }
 
@@ -646,7 +661,8 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
     double ny = dx;
     orig = new Point2D.Double(orig.x + BASE_RADIUS * dx, orig.y + BASE_RADIUS * dy);
     dest = new Point2D.Double(dest.x - BASE_RADIUS * dx, dest.y - BASE_RADIUS * dy);
-    if (conf._mainBPStyle == VARNAConfig.BP_STYLE.LW) {
+    if (conf._mainBPStyle == VARNAConfig.BP_STYLE.LW
+        || conf._mainBPStyle == VARNAConfig.BP_STYLE.LW_ALT) {
       double thickness = getBasePairThickness(style, conf);
       double circleDiameter = ((BASE_PAIR_DISTANCE - BASE_RADIUS) / 5.0);
 
@@ -660,13 +676,8 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
             out.drawLine(
                 (orig.x - nx), (orig.y - ny), (dest.x - nx), (dest.y - ny), conf._bpThickness);
           }
-        } else if (style.isCanonicalAU()) {
+        } else if (style.isCanonicalAU() || style.isWobbleUG()) {
           out.drawLine(orig.x, orig.y, dest.x, dest.y, conf._bpThickness);
-        } else if (style.isWobbleUG()) {
-          double cx = (dest.x + orig.x) / 2.0;
-          double cy = (dest.y + orig.y) / 2.0;
-          out.drawLine(orig.x, orig.y, dest.x, dest.y, conf._bpThickness);
-          drawSymbol(out, cx, cy, nx, ny, circleDiameter, false, ModeleBP.Edge.WC, thickness);
         } else {
           double cx = (dest.x + orig.x) / 2.0;
           double cy = (dest.y + orig.y) / 2.0;
@@ -694,7 +705,7 @@ public class RNA extends InterfaceVARNAObservable implements Serializable {
         } else if (p1 == p2) {
           drawSymbol(out, cx, cy, nx, ny, circleDiameter, style.isCIS(), p1, thickness);
         } else {
-          if (conf._drawAlternativeLW) {
+          if (conf._mainBPStyle == VARNAConfig.BP_STYLE.LW_ALT) {
             AlternativeLeontisWesthofDrawing.drawAlternativeSymbol(
                 out, orig, dest, style, thickness, circleDiameter, style.isCIS(), true);
           } else {

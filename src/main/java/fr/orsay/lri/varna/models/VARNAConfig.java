@@ -86,8 +86,12 @@ public class VARNAConfig implements Serializable, Cloneable {
     }
 
     public static BP_STYLE getStyle(String opt) {
+      if (opt == null) {
+        return null;
+      }
+      String normalized = opt.toLowerCase().replaceAll("[^a-z0-9]", "");
       for (BP_STYLE b : BP_STYLE.values()) {
-        if (opt.toLowerCase().equals(b.getOpt().toLowerCase())) return b;
+        if (normalized.equals(b.getOpt().toLowerCase())) return b;
       }
       return null;
     }

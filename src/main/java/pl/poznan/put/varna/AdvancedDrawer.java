@@ -112,7 +112,8 @@ public class AdvancedDrawer {
               System.err.println(
                   "Warning: Invalid bpStyle '"
                       + structureData.bpStyle
-                      + "'. Using default LW. Valid options: none, simple, rnaviz, lw, lwalt");
+                      + "'. Using default LW. Valid options: none, simple, rnaviz, lw, lw_alt (also"
+                      + " accepted as lwalt)");
             }
           }
 
